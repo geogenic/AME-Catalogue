@@ -1,18 +1,25 @@
 ###############################################################################
-  
+
 #PLEASE FOR GOD'S SAKE READ THE README
 
 #Loads stuff from rvars cache
-vars <- read.csv("vars.rvars")
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+cat("\nAME CATALOGUE: Initializing")
+text2_cache <- "f"
+vars <- read.csv("cache/vars.rvars")
 wd <- vars$directory
-try(setwd(as.character(wd)))
+try(setwd(as.character(wd)), silent=TRUE)
 prefix <- vars$prefix
-names_cat <- read.csv("names_cat.rvars")
-names_custom <- read.csv("names_custom.rvars")
-play_sound <- paste('"', as.character(wd), "/play_sound.bat", '"', sep = "")
+# names_cat <- read.csv("cache/names_cat.rvars")
+# names_custom <- read.csv("cache/names_custom.rvars")
+play_sound <- paste(as.character(wd), "sound/play_sound.bat", sep = "")
 
 #Loads Data from CSV exported from ED Discovery
+cat("\nAME CATALOGUE: Reading Data")
 content <- read.csv("Catalogue Full.csv")
+content_raw <- read.csv("Catalogue Full.csv")
 
 #Reads number of rows in spreadsheets
 data_entries <- nrow(content)
@@ -20,36 +27,34 @@ data_entries <- nrow(content)
 #Draw The Progress Bar
 pb <- winProgressBar(title = "AME Catalogue", label = "Initializing ", min = 0, max = 100, width = 300)
 
-system(play_sound)
-system('cscript say.vbs "Reading Data"')
+#system(play_sound, show.output.on.console = FALSE)
 
 #Assigns AME Catalogue Name to Each Entry
 #(Change Number After Colon to Match the Number of Entries in Each CSV)
-results <- NA
-for (i in 1:data_entries) {
-  if (content$StarType[i] == "") {
-    results[i] <- paste(prefix, "-", i, sep="")
-  }
-  else {
-    results[i] <- paste(prefix, "-S", i, sep="")
-  }
-}
-for (i in 1:data_entries) {
-  if (content$StarType[i] == "") {
-    content$CatRef[i] <- paste(results[i], content$PlanetClass[i], sep = "")
-  }
-  else {
-    content$CatRef[i] <- paste(results[i], content$StarType[i], content$Luminosity[i], sep = "")
-  }
-}
 
-for (i in 1:data_entries) {
+cat("\nAME CATALOGUE: Assigning AME Catalogue Refs")
+content_belts <- subset(content, content$Estimated.Value == 0)
+content <- anti_join(content, content_belts, by = "Estimated.Value")
+results <- NA
+content$CatRef
+for (i in 1:nrow(content)) {
+  if (content$Star.Type[i] == "")
+    results[i] <- paste(prefix, "-", i, sep="")
+  else 
+    results[i] <- paste(prefix, "-S", i, sep="")
+}
+for (i in 1:nrow(content)) {
+  if (content$Star.Type[i] == "")
+    content$CatRef[i] <- paste(results[i], content$PlanetClass[i], sep = "")
+  else
+    content$CatRef[i] <- paste(results[i], content$Star.Type[i], content$Luminosity[i], sep = "")
+}
+for (i in 1:nrow(content)) {
   content$X[i] <- i
 }
 
 setWinProgressBar(pb, 5, label = "Writing Object Types 5% Total Completion ")
-
-#Substitutes Planet / Star Class for AME Catalogue Abbreviation
+cat("\nAME CATALOGUE: Writing Object Types")
 content$CatRef <- gsub("High Metal Content Body", "HM", content$CatRef)
 content$CatRef <- gsub("Gas Giant With Ammonia Based Life", "GGWAL", content$CatRef)
 content$PlanetClass <- gsub("Gas Giant With Ammonia Based Life", "Sudarsky Gas Giant With Life", content$PlanetClass)
@@ -67,37 +72,58 @@ content$CatRef <- gsub("Water Giant", "WG", content$CatRef)
 content$CatRef <- gsub("Sudarsky Class V Gas Giant", "S5GG", content$CatRef)
 content$CatRef <- gsub("Sudarsky Class IV Gas Giant", "S4GG", content$CatRef)
 content$CatRef <- gsub("Gas Giant With Water Based Life", "GGWL", content$CatRef)
+content$CatRef <- gsub("Sudarsky Gas Giant With Life", "GGWL", content$CatRef)
 content$CatRef <- gsub("Rocky Ice Body", "RI", content$CatRef)
 content$CatRef <- gsub("Ammonia World", "AW", content$CatRef)
-content$StarType <- gsub("A_BlueWhiteSuperGiant", "A", content$StarType)
+content$Star.Type <- gsub("A_BlueWhiteSuperGiant", "AO", content$Star.Type)
 content$CatRef <- gsub("A_BlueWhiteSuperGiant", "AO", content$CatRef)
-content$StarType <- gsub("M_RedSuperGiant", "M", content$StarType)
-content$CatRef <- gsub("M_RedSuperGiantI", "MO", content$CatRef)
-content$StarType <- gsub("TTS", "T", content$StarType)
-content$StarType <- gsub("WC", "W", content$StarType)
-content$StarType <- gsub("N", "DA", content$StarType)
+content$CatRef <- gsub("M_RedGiant", "MO", content$CatRef)
+content$Star.Type <- gsub("M_RedGiant", "MO", content$Star.Type)
+content$CatRef <- gsub("M_RedSuperGiant", "MO", content$CatRef)
+content$Star.Type <- gsub("M_RedSuperGiant", "MO", content$Star.Type)
+content$CatRef <- gsub("M_RedSuperGiant", "MO", content$CatRef)
+content$Star.Type <- gsub("M_RedSuperGiant", "MO", content$Star.Type)
+content$CatRef <- gsub("K_OrangeGiant", "KO", content$CatRef)
+content$Star.Type <- gsub("K_OrangeGiant", "KO", content$Star.Type)
+content$Star.Type <- gsub("K_OrangeGiant", "KO", content$Star.Type)
+content$CatRef <- gsub("K_OrangeGiant", "KO", content$CatRef)
+content$Star.Type <- gsub("TTS", "T", content$Star.Type)
+content$Star.Type <- gsub("WC", "W", content$Star.Type)
+content$CatRef <- gsub("WC", "W", content$CatRef)
+content$Star.Type <- gsub("WDA", "W", content$Star.Type)
+content$CatRef <- gsub("WDA", "W", content$CatRef)
+content$Star.Type <- gsub("N", "DA", content$Star.Type)
 content$CatRef <- gsub("N", "DA", content$CatRef)
+content$CatRef <- gsub("DQ", "DA", content$CatRef)
+content$Star.Type <- gsub("DQ", "DA", content$Star.Type)
 
 setWinProgressBar(pb, 10, label = "Writing Proper Names 10% Total Completion ")
+cat("\nAME CATALOGUE: Writing Proper Names")
 
 names_cat$X <- NULL
 names_custom$X <- NULL
-data_numbers <- nrow(names_cat)
-for (i in 1:data_numbers) {
-  content$CatRef <- gsub(names_cat$names_cat[i], names_custom$names_custom[i], content$CatRef)
-}
-
+i <- NA
+# for (i in 1:nrow(names_cat)) {
+#   content$CatRef <- gsub(names_cat$names_cat[i], names_custom$names_custom[i], content$CatRef)
+# }
 ###############################################################################
 
 setWinProgressBar(pb, 20, label = "Converting Units 20% Total Completion ")
 
 #Converts Units to Match ED Discovery Entries
+cat("\nAME CATALOGUE: Converting Units ")
 content$Radius <- content$Radius / 1000
+cat("-- Radius ")
 content$SurfacePressure <- content$SurfacePressure / 100000
+cat("-- Pressure ")
 content$RotationPeriod <- content$RotationPeriod / 365 / 24 / 10
+cat("-- Rotation Period ")
 content$OrbitalPeriod <- content$OrbitalPeriod / 365 / 236.95
+cat("-- Orbital Period ")
 content$SurfaceTemperature <- content$SurfaceTemperature - 273.15
+cat("-- Temperature ")
 content$SemiMajorAxis <- content$SemiMajorAxis / 149597900000
+cat("-- Semi-Major Axis")
 
 #Forces Standard Notation Instead of Scientific Notation
 options(scipen=999)
@@ -105,6 +131,7 @@ options(scipen=999)
 setWinProgressBar(pb, 25, label = "Rounding Numbers 25% Total Completion ")
 
 #Rounds Numbers
+cat("\nAME CATALOGUE: Rounding Numbers")
 content$DistanceFromArrivalLS <- round(content$DistanceFromArrivalLS, digits = 2)
 content$Radius <- round(content$Radius, digits = 2)
 content$RotationPeriod <- round(content$RotationPeriod, digits = 8)
@@ -159,14 +186,16 @@ content$StellarMass <- round(content$StellarMass, digits = 6)
 content$AbsoluteMagnitude <- round(content$AbsoluteMagnitude, digits = 2)
 content$Age.MY <- round(content$Age.MY, digits = 2)
 content$OrbitalInclination <- round(content$OrbitalInclination, digits = 2)
+content <- content[-c(13955),]
 
 setWinProgressBar(pb, 30, label = "Writing CSV 30% Total Completion ")
 
+cat("\nAME CATALOGUE: Writing Final CSV")
 content <- content[,c("CatRef",setdiff(names(content),"CatRef"))]
 content <- content[,c("X",setdiff(names(content),"X"))]
 
 #Writes Everything Into a New CSV
-write.csv(content, file = "AME Catalogue (Final).csv")
+write.csv(content, file = "data/AME Catalogue (Final).csv")
 
 setWinProgressBar(pb, 45, label = "Preparing to Calculate Z-Scores 45% Total Completion ")
 
@@ -177,7 +206,80 @@ setWinProgressBar(pb, 45, label = "Preparing to Calculate Z-Scores 45% Total Com
 content_stars_final <- NA
 content_stars_final <- subset(content, content$StellarMass > 0)
 content_planets_final <- subset(content, content$StellarMass == 0)
+
+cat("\nAME CATALOGUE: Beginning Climate Estimation")
+content_planets_final$Climate_Estimation <- "N/A"
+for(i in 1:nrow(content_planets_final)) {
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] < -28 & content_planets_final$SurfaceTemperature[i] > -100 & content_planets_final$Water[i] > 0 & content_planets_final$Water[i] < 2.5, content_planets_final$Climate_Estimation[i] <- "Dry Extreme Subarctic", temp <- 1)
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] < -28 & content_planets_final$SurfaceTemperature[i] > -100 & content_planets_final$Water[i] > 2.5 & content_planets_final$Water[i] < 5.0, content_planets_final$Climate_Estimation[i] <- "Extreme Subarctic", temp <- 1)
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] < -28 & content_planets_final$SurfaceTemperature[i] > -100 & content_planets_final$Water[i] > 5.0 & content_planets_final$Water[i] < 7.5, content_planets_final$Climate_Estimation[i] <- "Wet Extreme Subarctic", temp <- 1)
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] < -28 & content_planets_final$SurfaceTemperature[i] > -100 & content_planets_final$Water[i] > 7.5, content_planets_final$Climate_Estimation[i] <- "Monsoonal Extreme Subarctic", temp <- 1)
+  
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] < 0.25 & content_planets_final$SurfaceTemperature[i] > -28 & content_planets_final$Water[i] > 0 & content_planets_final$Water[i] < 2.5, content_planets_final$Climate_Estimation[i] <- "Dry Subarctic", temp <- 1)
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] < 0.25 & content_planets_final$SurfaceTemperature[i] > -28 & content_planets_final$Water[i] > 2.5 & content_planets_final$Water[i] < 5, content_planets_final$Climate_Estimation[i] <- "Subarctic", temp <- 1)
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] < 0.25 & content_planets_final$SurfaceTemperature[i] > -28 & content_planets_final$Water[i] > 5 & content_planets_final$Water[i] < 7.5, content_planets_final$Climate_Estimation[i] <- "Wet Subarctic", temp <- 1)
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] < 0.25 & content_planets_final$SurfaceTemperature[i] > -28 & content_planets_final$Water[i] > 7.5, content_planets_final$Climate_Estimation[i] <- "Monsoonal Subarctic", temp <- 1)
+  
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] < 60 & content_planets_final$SurfaceTemperature[i] > 25 & content_planets_final$Water[i] > 0 & content_planets_final$Water[i] < 1, content_planets_final$Climate_Estimation[i] <- "Hot Desert", temp <- 1)
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] > 60 & content_planets_final$SurfaceTemperature[i] < 100 & content_planets_final$Water[i] > 0 & content_planets_final$Water[i] < 1, content_planets_final$Climate_Estimation[i] <- "Extreme Hot Desert", temp <- 1)
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] < 25 & content_planets_final$SurfaceTemperature[i] > 0.25 & content_planets_final$Water[i] > 0 & content_planets_final$Water[i] < 1, content_planets_final$Climate_Estimation[i] <- "Cold Desert", temp <- 1)
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] < 60 & content_planets_final$SurfaceTemperature[i] > 25 & content_planets_final$Water[i] > 1 & content_planets_final$Water[i] < 2, content_planets_final$Climate_Estimation[i] <- "Hot Semi-Arid", temp <- 1)
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] < 25 & content_planets_final$SurfaceTemperature[i] > 0.25 & content_planets_final$Water[i] > 1 & content_planets_final$Water[i] < 2, content_planets_final$Climate_Estimation[i] <- "Cold Semi-Arid", temp <- 1)
+  
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] < 60 & content_planets_final$SurfaceTemperature[i] > 25 & content_planets_final$Water[i] > 2.5 & content_planets_final$Water[i] < 4, content_planets_final$Climate_Estimation[i] <- "Savannah", temp <- 1)
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] < 25 & content_planets_final$SurfaceTemperature[i] > 10 & content_planets_final$Water[i] > 2 & content_planets_final$Water[i] < 3, content_planets_final$Climate_Estimation[i] <- "Steppe", temp <- 1)
+  
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] > 30 & content_planets_final$SurfaceTemperature[i] < 70 & content_planets_final$Water[i] > 7 & content_planets_final$Water[i] < 8, content_planets_final$Climate_Estimation[i] <- "Tropical", temp <- 1)
+  ifelse(content_planets_final$Atmosphere[i] != "" & content_planets_final$Atmosphere[i] != "None" & content_planets_final$SurfaceTemperature[i] > 30 & content_planets_final$SurfaceTemperature[i] < 70 & content_planets_final$Water[i] > 8 & content_planets_final$Water[i] < 15, content_planets_final$Climate_Estimation[i] <- "Monsoonal Tropical", temp <- 1)
+}
+for(i in 1:nrow(content_planets_final)) {
+  ifelse(is.na(content_planets_final$Climate_Estimation[i]==TRUE), content_planets_final$Climate_Estimation[i] <- "N/A", temp <- 1)
+}
+
+cat("\nAME CATALOGUE: Writing Planet Class Abbreviations")
+content$CatRef <- gsub("High Metal Content Body", "HM", content$CatRef)
+content$CatRef <- gsub("Gas Giant With Ammonia Based Life", "GGWAL", content$CatRef)
+content$PlanetClass <- gsub("Gas Giant With Ammonia Based Life", "Sudarsky Gas Giant With Life", content$PlanetClass)
+content$PlanetClass <- gsub("Gas Giant With Water Based Life", "Sudarsky Gas Giant With Life", content$PlanetClass)
+content$CatRef <- gsub("Rocky Body", "R", content$CatRef)
+content$CatRef <- gsub("Metal Rich Body", "MR", content$CatRef)
+content$CatRef <- gsub("Icy Body", "I", content$CatRef)
+content$CatRef <- gsub("Water World", "W", content$CatRef)
+content$CatRef <- gsub("Sudarsky Class I Gas Giant", "S1GG", content$CatRef)
+content$CatRef <- gsub("Sudarsky Class III Gas Giant", "S3GG", content$CatRef)
+content$CatRef <- gsub("Earthlike Body", "E", content$CatRef)
+content$CatRef <- gsub("Sudarsky Class II Gas Giant", "S2GG", content$CatRef)
+content$CatRef <- gsub("Helium Rich Gas Giant", "HRGG", content$CatRef)
+content$CatRef <- gsub("Water Giant", "WG", content$CatRef)
+content$CatRef <- gsub("Sudarsky Class V Gas Giant", "S5GG", content$CatRef)
+content$CatRef <- gsub("Sudarsky Class IV Gas Giant", "S4GG", content$CatRef)
+content$CatRef <- gsub("Gas Giant With Water Based Life", "GGWL", content$CatRef)
+content$CatRef <- gsub("Sudarsky Gas Giant With Life", "GGWL", content$CatRef)
+content$CatRef <- gsub("Rocky Ice Body", "RI", content$CatRef)
+content$CatRef <- gsub("Ammonia World", "AW", content$CatRef)
+content$Star.Type <- gsub("A_BlueWhiteSuperGiant", "AO", content$Star.Type)
+content$CatRef <- gsub("A_BlueWhiteSuperGiant", "AO", content$CatRef)
+content$CatRef <- gsub("M_RedSuperGiantI", "MO", content$CatRef)
+content$Star.Type <- gsub("M_RedSuperGiantI", "MO", content$Star.Type)
+content$CatRef <- gsub("M_RedSuperGiant", "MO", content$CatRef)
+content$Star.Type <- gsub("M_RedSuperGiant", "MO", content$Star.Type)
+content$CatRef <- gsub("K_OrangeGiantIII", "KO", content$CatRef)
+content$Star.Type <- gsub("K_OrangeGiantIII", "KO", content$Star.Type)
+content$Star.Type <- gsub("K_OrangeGiant", "KO", content$Star.Type)
+content$CatRef <- gsub("K_OrangeGiant", "KO", content$CatRef)
+content_stars_final$Star.Type <- gsub("TTS", "T", content_stars_final$Star.Type)
+content$Star.Type <- gsub("WC", "W", content$Star.Type)
+content$CatRef <- gsub("WC", "W", content$CatRef)
+content_stars_final$Star.Type <- gsub("WDA", "W", content_stars_final$Star.Type)
+content_stars_final$CatRef <- gsub("WDA", "W", content_stars_final$CatRef)
+content$Star.Type <- gsub("N", "DA", content$Star.Type)
+content$CatRef <- gsub("N", "DA", content$CatRef)
+content_stars_final$CatRef <- gsub("DQ", "DA", content_stars_final$CatRef)
+content_stars_final$Star.Type <- gsub("DQ", "DA", content_stars_final$Star.Type)
+
 Stars_K <- "CatRef"
+Stars_KO <- "CatRef"
+Stars_MO <- "CatRef"
 Stars_A <- "CatRef"
 Stars_C <- "CatRef"
 Stars_B <- "CatRef"
@@ -188,6 +290,7 @@ Stars_L <- "CatRef"
 Stars_M <- "CatRef"
 Stars_CompactStars <- "CatRef"
 Stars_O <- "CatRef"
+Stars_AO <- "CatRef"
 Stars_Protostars <- "CatRef"
 Stars_Y <- "CatRef"
 Stars_W <- "CatRef"
@@ -209,7 +312,7 @@ Planets_HRGG <- "CatRef"
 Planets_WG <- "CatRef"
 
 setWinProgressBar(pb, 50, label = "Calculating Z-Scores for Stars 50% Total Completion ")
-
+cat("\nAME CATALOGUE: Calculating Z-Scores for Stars")
 Star_Type <- "K"
 df <- "Stars_K"
 
@@ -217,44 +320,45 @@ content_stars_final$abs_rot_period <- abs(content_stars_final$RotationPeriod)
 content_planets_final$abs_rot_period <- abs(content_planets_final$RotationPeriod)
 
 zs <- function(Star_Type, df) {
-  omega <- sd(subset(content_stars_final$Radius, content_stars_final$StarType == Star_Type))
-  avg <- mean(subset(content_stars_final$Radius, content_stars_final$StarType == Star_Type))
-  zsc <- (subset(content_stars_final$Radius, content_stars_final$StarType == Star_Type) - avg)/omega
+  omega <- sd(subset(content_stars_final$Radius, content_stars_final$Star.Type == Star_Type))
+  avg <- mean(subset(content_stars_final$Radius, content_stars_final$Star.Type == Star_Type))
+  zsc <- (subset(content_stars_final$Radius, content_stars_final$Star.Type == Star_Type) - avg)/omega
   eval(parse(text = paste(df, "$Radius_Zsc <- zsc", sep = "")))
   eval(parse(text = paste(df, " <- as.data.frame(", df, ")", sep = "")))
-  eval(parse(text = paste(df, "[[1]] <- subset(content_stars_final$CatRef, content_stars_final$StarType == Star_Type)", sep = "")))
-  eval(parse(text = paste(df, "$X <- subset(content_stars_final$X, content_stars_final$StarType == Star_Type)", sep = "")))
-  eval(parse(text = paste(df, "$BodyName <- subset(content_stars_final$BodyName, content_stars_final$StarType == Star_Type)", sep = "")))
+  eval(parse(text = paste(df, "[[1]] <- subset(content_stars_final$CatRef, content_stars_final$Star.Type == Star_Type)", sep = "")))
+  eval(parse(text = paste(df, "$X <- subset(content_stars_final$X, content_stars_final$Star.Type == Star_Type)", sep = "")))
+  eval(parse(text = paste(df, "$BodyName <- subset(content_stars_final$BodyName, content_stars_final$Star.Type == Star_Type)", sep = "")))
   
-  omega <- sd(subset(content_stars_final$StellarMass, content_stars_final$StarType == Star_Type))
-  avg <- mean(subset(content_stars_final$StellarMass, content_stars_final$StarType == Star_Type))
-  zsc <- (subset(content_stars_final$StellarMass, content_stars_final$StarType == Star_Type) - avg)/omega
+  omega <- sd(subset(content_stars_final$StellarMass, content_stars_final$Star.Type == Star_Type))
+  avg <- mean(subset(content_stars_final$StellarMass, content_stars_final$Star.Type == Star_Type))
+  zsc <- (subset(content_stars_final$StellarMass, content_stars_final$Star.Type == Star_Type) - avg)/omega
   eval(parse(text = paste(df, "$Mass_Zsc <- zsc", sep = ""))) 
-
-  omega <- sd(subset(content_stars_final$AbsoluteMagnitude, content_stars_final$StarType == Star_Type))
-  avg <- mean(subset(content_stars_final$AbsoluteMagnitude, content_stars_final$StarType == Star_Type))
-  zsc <- (subset(content_stars_final$AbsoluteMagnitude, content_stars_final$StarType == Star_Type) - avg)/omega
+  
+  omega <- sd(subset(content_stars_final$AbsoluteMagnitude, content_stars_final$Star.Type == Star_Type))
+  avg <- mean(subset(content_stars_final$AbsoluteMagnitude, content_stars_final$Star.Type == Star_Type))
+  zsc <- (subset(content_stars_final$AbsoluteMagnitude, content_stars_final$Star.Type == Star_Type) - avg)/omega
   eval(parse(text = paste(df, "$Absolute_Magnitude_Zsc <- zsc", sep = ""))) 
   
-  omega <- sd(subset(content_stars_final$Age.MY, content_stars_final$StarType == Star_Type))
-  avg <- mean(subset(content_stars_final$Age.MY, content_stars_final$StarType == Star_Type))
-  zsc <- (subset(content_stars_final$Age.MY, content_stars_final$StarType == Star_Type) - avg)/omega
+  omega <- sd(subset(content_stars_final$Age.MY, content_stars_final$Star.Type == Star_Type))
+  avg <- mean(subset(content_stars_final$Age.MY, content_stars_final$Star.Type == Star_Type))
+  zsc <- (subset(content_stars_final$Age.MY, content_stars_final$Star.Type == Star_Type) - avg)/omega
   eval(parse(text = paste(df, "$Age_Zsc <- zsc", sep = ""))) 
   
-  omega <- sd(subset(content_stars_final$SurfaceTemperature, content_stars_final$StarType == Star_Type))
-  avg <- mean(subset(content_stars_final$SurfaceTemperature, content_stars_final$StarType == Star_Type))
-  zsc <- (subset(content_stars_final$SurfaceTemperature, content_stars_final$StarType == Star_Type) - avg)/omega
+  omega <- sd(subset(content_stars_final$SurfaceTemperature, content_stars_final$Star.Type == Star_Type))
+  avg <- mean(subset(content_stars_final$SurfaceTemperature, content_stars_final$Star.Type == Star_Type))
+  zsc <- (subset(content_stars_final$SurfaceTemperature, content_stars_final$Star.Type == Star_Type) - avg)/omega
   eval(parse(text = paste(df, "$Surface_Temperature_Zsc <- zsc", sep = "")))
   
-  omega <- sd(subset(content_stars_final$abs_rot_period, content_stars_final$StarType == Star_Type))
-  avg <- mean(subset(content_stars_final$abs_rot_period, content_stars_final$StarType == Star_Type))
-  zsc <- (subset(content_stars_final$abs_rot_period, content_stars_final$StarType == Star_Type) - avg)/omega
+  omega <- sd(subset(content_stars_final$abs_rot_period, content_stars_final$Star.Type == Star_Type))
+  avg <- mean(subset(content_stars_final$abs_rot_period, content_stars_final$Star.Type == Star_Type))
+  zsc <- (subset(content_stars_final$abs_rot_period, content_stars_final$Star.Type == Star_Type) - avg)/omega
   eval(parse(text = paste(df, "$RotationPeriod_Zsc <- zsc", sep = "")))
   
   return(eval(parse(text = paste(df, sep = ""))))
 }
 
 setWinProgressBar(pb, 70, label = "Calculating Z-Scores for Planets 70% Total Completion ")
+cat("\nAME CATALOGUE: Calculating Z-Scores for Planets")
 
 Planet_Class <- "High Metal Content Body"
 df_p <- "Planets_HM"
@@ -273,7 +377,7 @@ zp <- function(Planet_Class, df_p) {
   avg <- mean(subset(content_planets_final$EarthMasses, content_planets_final$PlanetClass == Planet_Class))
   zsc <- (subset(content_planets_final$EarthMasses, content_planets_final$PlanetClass == Planet_Class) - avg)/omega
   eval(parse(text = paste(df_p, "$Mass_Zsc <- zsc", sep = "")))
-
+  
   omega <- sd(subset(content_planets_final$abs_rot_period, content_planets_final$PlanetClass == Planet_Class))
   avg <- mean(subset(content_planets_final$abs_rot_period, content_planets_final$PlanetClass == Planet_Class))
   zsc <- (subset(content_planets_final$abs_rot_period, content_planets_final$PlanetClass == Planet_Class) - avg)/omega
@@ -434,11 +538,15 @@ zp <- function(Planet_Class, df_p) {
   zsc <- (subset(content_planets_final$Yttrium, content_planets_final$PlanetClass == Planet_Class) - avg)/omega
   eval(parse(text = paste(df_p, "$MineralsYttrium_Zsc <- zsc", sep = "")))
   
+  zsc <- (subset(content_planets_final$Climate_Estimation, content_planets_final$PlanetClass == Planet_Class))
+  eval(parse(text = paste(df_p, "$Climate_Estimation <- zsc", sep = "")))
+  
   return(eval(parse(text = paste(df_p, sep = ""))))
-  }
+}
 
 #Check z-scores for attributes of...
 
+cat("\nAME CATALOGUE: Sorting Z-Scores by Object Type")
 Stars_K <- zs(Star_Type = "K", df = "Stars_K")
 Stars_A <- zs(Star_Type = "A", df = "Stars_A")
 Stars_B <- zs(Star_Type = "B", df = "Stars_B")
@@ -453,6 +561,8 @@ Stars_CompactStars <- zs(Star_Type = "DA", df = "Stars_CompactStars")
 Stars_Protostars <- zs(Star_Type = "T", df = "Stars_Protostars")
 Stars_W <- zs(Star_Type = "W", df = "Stars_W")
 Stars_Y <- zs(Star_Type = "Y", df = "Stars_Y")
+Stars_KO <- zs(Star_Type = "KO", df = "Stars_KO")
+Stars_MO <- zs(Star_Type = "MO", df = "Stars_MO")
 
 Planets_HM <- zp(Planet_Class = "High Metal Content Body", df_p = "Planets_HM")
 Planets_AW <- zp(Planet_Class = "Ammonia World", df_p = "Planets_AW")
@@ -472,8 +582,8 @@ Planets_HRGG <- zp(Planet_Class = "Helium Rich Gas Giant", df_p = "Planets_HRGG"
 Planets_WG <- zp(Planet_Class = "Water Giant", df_p = "Planets_WG")
 
 setWinProgressBar(pb, 90, label = "Merging Data 90% Total Completion ")
-
-content_zsc <- Reduce(function(...) merge(..., all=TRUE), list(
+cat("\nAME CATALOGUE: Merging Data")
+content_zsc <- bind_rows(
   Stars_K,
   Stars_A,
   Stars_C,
@@ -488,6 +598,8 @@ content_zsc <- Reduce(function(...) merge(..., all=TRUE), list(
   Stars_Protostars,
   Stars_Y,
   Stars_W,
+  Stars_MO,
+  Stars_KO,
   Planets_HM,
   Planets_AW,
   Planets_E,
@@ -504,126 +616,128 @@ content_zsc <- Reduce(function(...) merge(..., all=TRUE), list(
   Planets_GGWL,
   Planets_HRGG,
   Planets_WG
-))
-
+)
 data_entries <- nrow(content)
 
-for (i in 1:data_entries) {
+cat("\nAME CATALOGUE: Cleaning Up Data")
+for (i in 1:nrow(content)) {
   ifelse(content$StellarMass[i] > 0, content$Density[i] <- round(((content$StellarMass[i]*1989000000000000000000000000000)/((4/3)*(3.14159265358979323*content$Radius[i]^3))/10000000000000), digits = 8), content$Density[i] <- round(((content$EarthMasses[i]*5973600000000000000000000)/((4/3)*(3.14159265358979323*content$Radius[i]^3)))/100000000000, digits = 2))
 }
 
 data_entries <- nrow(content_zsc)
-anomalies <- " "
-  
-for (i in 1:data_entries) {
-  ifelse(content_zsc$Radius_Zsc[i] > 3,  content_zsc$Anomalies[i] <- "large radius", content_zsc$Anomalies[i] <- "")
-  ifelse(content_zsc$Mass_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "massive", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$Mass_Zsc[i] < -3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "less massive", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$SurfaceTemp_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "hot", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$SurfaceTemp_Zsc[i] < -3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "cold", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$RotationPeriod_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "rotating quickly", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$RotationPeriod_Zsc[i] < -3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "rotating slowly", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$Eccentricity_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "oblong orbit", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$Eccentricity_Zsc[i] < -3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "circular orbit", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$Inclination_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "high positive inclination", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$Inclination_Zsc[i] < -3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "high negative inclination", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$Periapsis_Zsc[i] > 2,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "high periapsis", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$Periapsis_Zsc[i] < -2,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "low periapsis", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$OrbitalPeriod_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "orbiting quickly", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$OrbitalPeriod_Zsc[i] < -2,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "orbiting slowly", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$AxialTilt_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "high positive axial tilt", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$AxialTilt_Zsc[i] < -3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "high negative axial tilt", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$SurfaceGravity_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "high g", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$SurfaceGravity_Zsc[i] < -2,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "low g", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$SurfacePressure_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "high pressure", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$SurfacePressure_Zsc[i] < -1,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "low pressure", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsCarbon_Zsc[i] > 1.7,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "carbon rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsIron_Zsc[i] > 1.7,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "iron rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsNickel_Zsc[i] > 1.7,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "nickel rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsPhosphorus_Zsc[i] > 1.7,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "phosphorus rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsSulphur_Zsc[i] > 1.7,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "sulphur rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsArsenic_Zsc[i] > 4,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "arsenic rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsChromium_Zsc[i] > 2,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "chromium rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsGermanium_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "germanium rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsManganese_Zsc[i] > 2,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "manganese rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsSelenium_Zsc[i] > 4,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "selenium rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsVanadium_Zsc[i] > 2.6,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "vanadium rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsZinc_Zsc[i] > 2.5,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "zinc rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsZirconium_Zsc[i] > 4,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "zirconium rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsCadmium_Zsc[i] > 2.7,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "cadmium rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsMercury_Zsc[i] > 3.4,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "mercury rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsMolybdenum_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "molybdenum rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsNiobium_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "niobium rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsTin_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "tin rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsTungsten_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "tungsten rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsAntimony_Zsc[i] > 4,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "antimony rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsPolonium_Zsc[i] > 4.5,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "polonium rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsRuthenium_Zsc[i] > 4,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "ruthenium rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsTechnetium_Zsc[i] > 3.5,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "technetium rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsTellurium_Zsc[i] > 4,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "tellurium rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$MineralsYttrium_Zsc[i] > 3.6,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "yttrium rich", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$Absolute_Magnitude_Zsc[i] > 2,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "dim", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$Absolute_Magnitude_Zsc[i] < -2,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "bright", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$Age_Zsc[i] > 2,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "old", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-  ifelse(content_zsc$Age_Zsc[i] < -2,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "young", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-}
 
-for (i in 1:data_entries) {
-  ifelse(content_zsc$Radius_Zsc[i] < -3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "small radius", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = ""))
-}
+cat("\nAME CATALOGUE: Finding Anomalies")
+content_zsc$Anomalies <- NA
 
+for(i in 1:nrow(content_zsc)) {
+  ifelse(content_zsc$Radius_Zsc[i] > 3, content_zsc$Anomalies[i] <- "large radius", content_zsc$Anomalies[i] <- "")
+  ifelse(content_zsc$Mass_Zsc[i] > 3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "massive", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$Mass_Zsc[i] < -3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "less massive", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$SurfaceTemp_Zsc[i] > 3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "hot", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$SurfaceTemp_Zsc[i] < -3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "cold", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$RotationPeriod_Zsc[i] > 3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "rotating quickly", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$Eccentricity_Zsc[i] > 3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "oblong orbit", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$Eccentricity_Zsc[i] < -3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "circular orbit", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$Inclination_Zsc[i] > 3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "high positive inclination", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$Inclination_Zsc[i] < -3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "high negative inclination", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$Periapsis_Zsc[i] > 2, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "high periapsis", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$Periapsis_Zsc[i] < -2, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "low periapsis", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$OrbitalPeriod_Zsc[i] > 3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "orbiting quickly", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$OrbitalPeriod_Zsc[i] < -2, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "orbiting slowly", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$AxialTilt_Zsc[i] > 3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "high positive axial tilt", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$AxialTilt_Zsc[i] < -3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "high negative axial tilt", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$SurfaceGravity_Zsc[i] > 3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "high g", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$SurfaceGravity_Zsc[i] < -2, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "low g", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$SurfacePressure_Zsc[i] > 3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "high pressure", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$SurfacePressure_Zsc[i] < -1, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "low pressure", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsCarbon_Zsc[i] > 1.7, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "carbon rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsIron_Zsc[i] > 1.7, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "iron rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsNickel_Zsc[i] > 1.7, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "nickel rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsPhosphorus_Zsc[i] > 1.7, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "phosphorus rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsSulphur_Zsc[i] > 1.7, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "sulphur rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsArsenic_Zsc[i] > 4, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "arsenic rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsChromium_Zsc[i] > 2, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "chromium rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsGermanium_Zsc[i] > 3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "germanium rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsManganese_Zsc[i] > 2, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "manganese rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsSelenium_Zsc[i] > 4, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "selenium rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsVanadium_Zsc[i] > 2.6, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "vanadium rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsZinc_Zsc[i] > 2.5, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "zinc rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsZirconium_Zsc[i] > 4, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "zirconium rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsCadmium_Zsc[i] > 2.7, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "cadmium rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsMercury_Zsc[i] > 3.4, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "mercury rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsMolybdenum_Zsc[i] > 3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "molybdenum rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsNiobium_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "niobium rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsTin_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "tin rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsTungsten_Zsc[i] > 3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "tungsten rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsAntimony_Zsc[i] > 4,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "antimony rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsPolonium_Zsc[i] > 4.5, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "polonium rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsRuthenium_Zsc[i] > 4, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "ruthenium rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsTechnetium_Zsc[i] > 3.5, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "technetium rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsTellurium_Zsc[i] > 4, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "tellurium rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$MineralsYttrium_Zsc[i] > 3.6, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "yttrium rich", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$Absolute_Magnitude_Zsc[i] > 2, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "dim", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$Absolute_Magnitude_Zsc[i] < -2, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "bright", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$Age_Zsc[i] > 2, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "old", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$Age_Zsc[i] < -2, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "young", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$Climate_Estimation[i] != "N/A",  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "climate estimation succeded", sep = ", "), content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "", sep = ""))
+  ifelse(content_zsc$Radius_Zsc[i] < -3,  content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "small radius", sep = ", "),   ifelse(content_zsc$Radius_Zsc[i] < -3, content_zsc$Anomalies[i] <- paste(content_zsc$Anomalies[i], "small radius", sep = ", "), paste(content_zsc$Anomalies[i], "", sep = "")))
+  }
+
+cat("\nAME CATALOGUE: Merging Data")
 content_zsc_significant <- subset(content_zsc,
-                                          content_zsc$Radius_Zsc > 3 |
-                                          content_zsc$Mass_Zsc > 3 |
-                                          content_zsc$SurfaceTemp_Zsc > 3 |
-                                          content_zsc$RotationPeriod_Zsc > 3 |
-                                          content_zsc$Eccentricity_Zsc > 3 |
-                                          content_zsc$Inclination_Zsc > 3 |
-                                          content_zsc$AxialTilt_Zsc > 3 |
-                                          content_zsc$SurfaceGravity_Zsc > 3 |
-                                          content_zsc$SurfacePressure_Zsc > 3 |
-                                          content_zsc$MineralsCarbon_Zsc > 1.7 |
-                                          content_zsc$MineralsAntimony_Zsc > 4 |
-                                          content_zsc$MineralsArsenic_Zsc > 4 |
-                                          content_zsc$MineralsCadmium_Zsc > 2.7 |
-                                          content_zsc$MineralsIron_Zsc > 1.7 |
-                                          content_zsc$MineralsChromium_Zsc > 2 |
-                                          content_zsc$MineralsGermanium_Zsc > 3 |
-                                          content_zsc$MineralsManganese_Zsc > 2 |
-                                          content_zsc$MineralsMercury_Zsc > 3.4 |
-                                          content_zsc$MineralsMolybdenum_Zsc > 3 |
-                                          content_zsc$MineralsNickel_Zsc > 1.7 |
-                                          content_zsc$MineralsNiobium_Zsc > 3 |
-                                          content_zsc$MineralsPhosphorus_Zsc > 1.7 |
-                                          content_zsc$MineralsPolonium_Zsc > 4.5 |
-                                          content_zsc$MineralsRuthenium_Zsc > 4 |
-                                          content_zsc$MineralsSelenium_Zsc > 4 |
-                                          content_zsc$MineralsSulphur_Zsc > 1.7 |
-                                          content_zsc$MineralsTechnetium_Zsc > 3.5 |
-                                          content_zsc$MineralsTellurium_Zsc > 4 |
-                                          content_zsc$MineralsTin_Zsc > 3 |
-                                          content_zsc$MineralsTungsten_Zsc > 3 |
-                                          content_zsc$MineralsVanadium_Zsc > 2.6 |
-                                          content_zsc$MineralsYttrium_Zsc > 3.6 |
-                                          content_zsc$MineralsZinc_Zsc > 2.5 |
-                                          content_zsc$MineralsZirconium_Zsc > 4 |
-                                          content_zsc$Absolute_Magnitude_Zsc > 2 |
-                                          content_zsc$Age_Zsc > 2 |
-                                          content_zsc$Radius_Zsc < -3 |
-                                          content_zsc$Mass_Zsc < -3 |
-                                          content_zsc$SurfaceTemp_Zsc < -3 |
-                                          content_zsc$RotationPeriod_Zsc < -3 |
-                                          content_zsc$Eccentricity_Zsc < -3 |
-                                          content_zsc$Inclination_Zsc < -3 |
-                                          content_zsc$AxialTilt_Zsc < -3 |
-                                          content_zsc$SurfaceGravity_Zsc < -3 |
-                                          content_zsc$SurfacePressure_Zsc < -3 |
-                                          content_zsc$Absolute_Magnitude_Zsc < -2 |
-                                          content_zsc$Age_Zsc < -2
-                                  )
+                                  content_zsc$Radius_Zsc > 3 |
+                                    content_zsc$Mass_Zsc > 3 |
+                                    content_zsc$SurfaceTemp_Zsc > 3 |
+                                    content_zsc$RotationPeriod_Zsc > 3 |
+                                    content_zsc$Eccentricity_Zsc > 3 |
+                                    content_zsc$Inclination_Zsc > 3 |
+                                    content_zsc$AxialTilt_Zsc > 3 |
+                                    content_zsc$SurfaceGravity_Zsc > 3 |
+                                    content_zsc$SurfacePressure_Zsc > 3 |
+                                    content_zsc$MineralsCarbon_Zsc > 1.7 |
+                                    content_zsc$MineralsAntimony_Zsc > 4 |
+                                    content_zsc$MineralsArsenic_Zsc > 4 |
+                                    content_zsc$MineralsCadmium_Zsc > 2.7 |
+                                    content_zsc$MineralsIron_Zsc > 1.7 |
+                                    content_zsc$MineralsChromium_Zsc > 2 |
+                                    content_zsc$MineralsGermanium_Zsc > 3 |
+                                    content_zsc$MineralsManganese_Zsc > 2 |
+                                    content_zsc$MineralsMercury_Zsc > 3.4 |
+                                    content_zsc$MineralsMolybdenum_Zsc > 3 |
+                                    content_zsc$MineralsNickel_Zsc > 1.7 |
+                                    content_zsc$MineralsNiobium_Zsc > 3 |
+                                    content_zsc$MineralsPhosphorus_Zsc > 1.7 |
+                                    content_zsc$MineralsPolonium_Zsc > 4.5 |
+                                    content_zsc$MineralsRuthenium_Zsc > 4 |
+                                    content_zsc$MineralsSelenium_Zsc > 4 |
+                                    content_zsc$MineralsSulphur_Zsc > 1.7 |
+                                    content_zsc$MineralsTechnetium_Zsc > 3.5 |
+                                    content_zsc$MineralsTellurium_Zsc > 4 |
+                                    content_zsc$MineralsTin_Zsc > 3 |
+                                    content_zsc$MineralsTungsten_Zsc > 3 |
+                                    content_zsc$MineralsVanadium_Zsc > 2.6 |
+                                    content_zsc$MineralsYttrium_Zsc > 3.6 |
+                                    content_zsc$MineralsZinc_Zsc > 2.5 |
+                                    content_zsc$MineralsZirconium_Zsc > 4 |
+                                    content_zsc$Absolute_Magnitude_Zsc > 2 |
+                                    content_zsc$Age_Zsc > 2 |
+                                    content_zsc$Radius_Zsc < -3 |
+                                    content_zsc$Mass_Zsc < -3 |
+                                    content_zsc$SurfaceTemp_Zsc < -3 |
+                                    content_zsc$RotationPeriod_Zsc < -3 |
+                                    content_zsc$Eccentricity_Zsc < -3 |
+                                    content_zsc$Inclination_Zsc < -3 |
+                                    content_zsc$AxialTilt_Zsc < -3 |
+                                    content_zsc$SurfaceGravity_Zsc < -3 |
+                                    content_zsc$SurfacePressure_Zsc < -3 |
+                                    content_zsc$Absolute_Magnitude_Zsc < -2 |
+                                    content_zsc$Age_Zsc < -2 |
+                                    content_zsc$Climate_Estimation[i] != "N/A"
+)
 
 data_entries <- nrow(content_zsc)
 
+cat("\nAME CATALOGUE: Cleaning Up Data")
 content_zsc <- content_zsc[,c("Anomalies",setdiff(names(content_zsc),"Anomalies"))]
 content_zsc <- content_zsc[,c("BodyName",setdiff(names(content_zsc),"BodyName"))]
 content_zsc <- content_zsc[,c("X",setdiff(names(content_zsc),"X"))]
@@ -631,30 +745,17 @@ content_zsc_significant <- content_zsc_significant[,c("Anomalies",setdiff(names(
 content_zsc_significant <- content_zsc_significant[,c("BodyName",setdiff(names(content_zsc_significant),"BodyName"))]
 content_zsc_significant <- content_zsc_significant[,c("X",setdiff(names(content_zsc_significant),"X"))]
 
-content_zsc_significant_recent <- subset(content_zsc_significant, content_zsc_significant$X < data_entries & content_zsc_significant$X > (data_entries-25))
+cat("\nAME CATALOGUE: Compiled Report!\nEnter System Name to View Report.")
 
 ###############################################################################
 
-write.csv(content_zsc, file = "AME Catalogue (Z-Scores).csv")
-
-setWinProgressBar(pb, 100, label = "Cleaning Up 100% Total Completion ")
-
-system('cscript say.vbs "Completed program, stand by for anomalous reedings report"')
-
+write.csv(content_zsc, file = "data/AME Catalogue (Z-Scores).csv")
+write.csv(content_belts, file = "data/AME Catalogue (Asteroid Belts).csv")
+write.csv(content_planets_final, file = "data/AME Catalogue (Planets).csv")
+write.csv(content_stars_final, file = "data/AME Catalogue (Stars).csv")
+write.csv(content_zsc_significant, file = "data/AME Catalogue (Significant ZSCs).csv")
+#current_system <- readline(prompt="\nWhat system are you in?: ")
+#sys_x <- c(content_zsc_significant$X[grep(current_system, content_zsc_significant$BodyName, ignore.case = TRUE)])
+#ifelse(length(sys_x) == 0, content_zsc_significant_recent <- NA, content_zsc_significant_recent <- filter(content_zsc_significant, grepl(paste(sys_x, collapse="|"), X, ignore.case = TRUE)))
+#View(content_zsc_significant_recent)
 close(pb)
-
-#Opens Both CSVs in the RStudio Viewer
-View(content_zsc_significant)
-View(content)
-View(content_zsc)
-View(content_zsc_significant_recent)
-
-Sys.sleep(7)
-
-text <- ""
-data_entries <- nrow(content_zsc_significant_recent)
-for (i in 1:data_entries) {
-  text <- paste(text, "body name", content_zsc_significant_recent$BodyName[i], "has anomalies", content_zsc_significant_recent$Anomalies[i], ".", sep = " ")
-}
-text_final <- paste('cscript say.vbs ', '"', text, '"', sep = "")
-system(text_final)
