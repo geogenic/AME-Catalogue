@@ -30,13 +30,17 @@ directory <- ""
 
 names_cat <- NA
 names_cat <- c(
-  
+  "PUT NAMES HERE",
+  "HERE WORKS TOO",
+  "ONE PER LINE"
   )
 names_cat <- as.data.frame(names_cat)
 
 names_custom <- NA
 names_custom <- c(
-  
+  "PUT CUSTOM NAMES HERE",
+  "HERE WORKS TOO",
+  "ONE PER LINE"
 )
 names_custom <- as.data.frame(names_custom)
 
