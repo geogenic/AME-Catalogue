@@ -13,9 +13,8 @@ content_final$X.1 <- NULL
 setWinProgressBar(pb, 50, label = "Loading CSV 50% Total Completion ")
 
 #Subset Data By Properties
-#Put properties where it says "PUT PARAMETERS HERE", separated by commas
 #AND operator is &, OR operator is |
-results <- subset(content_final, PUT PARAMETERS HERE)
+results <- subset(content_final, content_final$Age.MY == 0)
 
 setWinProgressBar(pb, 100, label = "Subsetting Data 100% Total Completion ")
 
